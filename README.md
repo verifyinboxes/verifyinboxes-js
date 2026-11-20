@@ -14,16 +14,6 @@ email addresses can receive mail, one at a time or as lists of any size, and rea
 
 ## Install
 
-Not published yet: until the first release is on npm, build it from this repository and install the package it makes:
-
-```bash
-git clone https://github.com/verifyinboxes/verifyinboxes-js && cd verifyinboxes-js
-pnpm install && pnpm build && npm pack          # makes verifyinboxes-0.1.0.tgz
-cd ../your-project && npm install ../verifyinboxes-js/verifyinboxes-0.1.0.tgz
-```
-
-Once released:
-
 ```bash
 npm install verifyinboxes
 # or: pnpm add verifyinboxes / yarn add verifyinboxes / bun add verifyinboxes
