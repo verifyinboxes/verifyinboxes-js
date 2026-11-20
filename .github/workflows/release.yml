@@ -1,0 +1,58 @@
+name: Release
+
+# Pushing a tag vX.Y.Z publishes that version to npm.
+#
+# No token is stored anywhere: npm trusts this workflow through OpenID Connect ("trusted publishing"), and attaches
+# a provenance statement to the package. The package on npm must have a trusted publisher for organization
+# "verifyinboxes", repository "verifyinboxes-js", workflow "release.yml", environment "npm", allowed to `npm publish`.
+# Without one npm refuses the publish and nothing is uploaded. A version already on npm is not published again.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to npm
+    if: github.repository == 'verifyinboxes/verifyinboxes-js'
+    runs-on: ubuntu-latest
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/verifyinboxes
+    permissions:
+      contents: read
+      id-token: write # the OpenID Connect token npm checks; this job has no other credential
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24" # trusted publishing needs npm 11.5.1 or later and Node 22.14 or later
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false # a release is built from nothing
+      - name: The tag is the version in package.json and in the package
+        id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          in_package=$(sed -n "s/^export const VERSION = '\(.*\)';$/\1/p" src/version.ts)
+          if [ "v$version" != "$GITHUB_REF_NAME" ] || [ "$in_package" != "$version" ]; then
+            echo "::error::the tag is $GITHUB_REF_NAME, package.json says $version and src/version.ts says $in_package"
+            exit 1
+          fi
+          if npm view "verifyinboxes@$version" version >/dev/null 2>&1; then
+            echo "::notice::verifyinboxes $version is already on npm; nothing to publish"
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          fi
+      - run: npm --version
+      - run: pnpm install --frozen-lockfile
+      # prepublishOnly runs the type check, the tests, the build and the import/require smoke test first.
+      - run: npm publish --access public --provenance
+        if: steps.version.outputs.published != 'true'

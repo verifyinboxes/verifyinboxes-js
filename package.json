@@ -1,0 +1,75 @@
+{
+  "name": "verifyinboxes",
+  "version": "0.1.0",
+  "description": "The official JavaScript and TypeScript library for the VerifyInboxes API",
+  "license": "MIT",
+  "author": "VerifyInboxes <developers@verifyinboxes.com>",
+  "homepage": "https://verifyinboxes.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/verifyinboxes/verifyinboxes-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/verifyinboxes/verifyinboxes-js/issues"
+  },
+  "keywords": [
+    "verifyinboxes",
+    "email",
+    "email-verification",
+    "email-validation",
+    "deliverability",
+    "api",
+    "sdk",
+    "typescript"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "node scripts/smoke-esm.mjs && node scripts/smoke-cjs.cjs",
+    "check": "pnpm typecheck && pnpm test && pnpm build && pnpm smoke",
+    "prepublishOnly": "pnpm check"
+  },
+  "devDependencies": {
+    "@types/node": "18.19.130",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "pnpm": {
+    "overrides": {
+      "vite": "6.4.6"
+    },
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

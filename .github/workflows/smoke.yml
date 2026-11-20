@@ -1,0 +1,43 @@
+name: Smoke
+
+# Every week (and on demand), the released code against the live API: the account, one check and a two-address list
+# (tests/smoke.test.ts). It needs the repository secret VERIFYINBOXES_SMOKE_API_KEY, a key of an organisation with
+# a few credits; without it, it says so and succeeds.
+on:
+  schedule:
+    - cron: "17 5 * * 1" # Mondays, 05:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Against the live API
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VERIFYINBOXES_SMOKE_API_KEY: ${{ secrets.VERIFYINBOXES_SMOKE_API_KEY }}
+    steps:
+      - name: Without the secret there is nothing to run
+        if: env.VERIFYINBOXES_SMOKE_API_KEY == ''
+        run: echo "::notice::VERIFYINBOXES_SMOKE_API_KEY is not set, so the smoke test did not run."
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: env.VERIFYINBOXES_SMOKE_API_KEY != ''
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        if: env.VERIFYINBOXES_SMOKE_API_KEY != ''
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: env.VERIFYINBOXES_SMOKE_API_KEY != ''
+        with:
+          node-version: "24"
+          cache: pnpm
+      - if: env.VERIFYINBOXES_SMOKE_API_KEY != ''
+        run: pnpm install --frozen-lockfile
+      - if: env.VERIFYINBOXES_SMOKE_API_KEY != ''
+        run: pnpm vitest run tests/smoke.test.ts
